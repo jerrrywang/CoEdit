@@ -1,10 +1,14 @@
 import React from 'react';
+import { Button } from '@material-ui/core/Button';
 import TextEditor from './components/textEditor/TextEditor';
+
+
 
 export default class App extends React.Component {
   render() {
     const styles = {
       main: {
+        fontFamily: 'Roboto',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -13,7 +17,7 @@ export default class App extends React.Component {
     };
     return (
         <div style={styles.main}>
-          <h2>Text editor!</h2>
+          <h1>Draft.js Editor</h1>
           <TextEditor />
         </div>
     );
