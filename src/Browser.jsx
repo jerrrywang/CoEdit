@@ -1,8 +1,8 @@
 import { BrowserRouter } from 'react-router-dom';
 import React from 'react';
-import App from './app';
+import App from './components/App';
 
-class Routes extends React.Component {
+class Browser extends React.Component {
     render() {
         return (
             <BrowserRouter>
@@ -11,3 +11,5 @@ class Routes extends React.Component {
         )
     }
 }
+
+export default Browser;

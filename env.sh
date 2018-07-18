@@ -1,0 +1,1 @@
+export MONGODB_URI="mongodb://gdocs:gdocs1@ds235431.mlab.com:35431/hackathon"
