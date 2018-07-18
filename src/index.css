@@ -1,0 +1,48 @@
+html, body {
+  padding:0;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background-color: #FFF;
+  font-family: Roboto, sans-serif;
+}
+
+.editor {
+  height: clac(100vh-105px);
+  background-color: #FFF;
+  overflow: auto;
+  border-top: solid 1px #ccc;
+  padding: 5px;
+  padding-left: 16px;
+}
+
+.document-toolbar {
+  background-color: #FFF;
+  border-radius: 6px;
+}
+
+.document-header {
+  font-family: Roboto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background-color: skyBlue;
+}
+
+.document-title {
+  padding-left: 30px;
+}
+
+.text-align-left {
+  text-align: left;
+}
+
+.text-align-right {
+  text-align: right;
+}
+
+.text-align-center {
+  text-align: center;
+}

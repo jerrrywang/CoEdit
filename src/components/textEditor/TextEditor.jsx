@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Editor, EditorState, RichUtils} from 'draft-js';
-import { TwitterPicker } from 'react-color';
+import {TwitterPicker} from 'react-color';
+import Fade from '@material-ui/core/Fade';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Button from '@material-ui/core/Button';
@@ -20,9 +21,73 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import CodeIcon from '@material-ui/icons/Code';
 import OLIcon from '@material-ui/icons/FormatListNumbered';
 import ULIcon from '@material-ui/icons/FormatListBulleted';
+import TextLeftIcon from '@material-ui/icons/FormatAlignLeft';
+import TextRightIcon from '@material-ui/icons/FormatAlignRight';
+import TextCenterIcon from '@material-ui/icons/FormatAlignCenter';
+import JustifyIcon from '@material-ui/icons/FormatAlignJustify';
 
+const customStyleMap = {
+  remoteCursor: {
+    borderLeft: 'solid 3px lightGrey'
+  },
+  'HIGHLIGHT': {
+    backgroundColor: 'lightgreen'
+  },
+}
 
-export default class TextEditor extends React.Component {
+//THIS FUNCTION WOULD BE A NECESSARY METHOD IF WE RENDERED ALL BUTTON IN ONE MAP
+// onStyleChange = (style) => (e) => {
+//    e.preventDefault()
+//    const toggleFn = isInline(style) ? RichUtils.toggleInlineStyle : RichUtils.toggleBlockType;
+//    this.onChange(toggleFn(this.state.editorState, style))
+//  };
+
+const TOOLBAR_1 = [
+  {
+    label: BoldIcon,
+    style: 'BOLD'
+  }, {
+    label: ItalicIcon,
+    style: 'ITALIC'
+  }, {
+    label: UnderlineIcon,
+    style: 'UNDERLINE'
+  }, {
+    label: HighlightIcon,
+    style: 'HIGHLIGHT'
+  }, {
+    label: CodeIcon,
+    style: 'CODE'
+  }
+]
+
+const TOOLBAR_2 = [
+  {
+    label: TextLeftIcon,
+    style: 'text-align-left'
+  }, {
+    label: TextCenterIcon,
+    style: 'text-align-center'
+  }, {
+    label: TextRightIcon,
+    style: 'text-align-right'
+  }, {
+    label: JustifyIcon,
+    style: 'text-align-justify'
+  }
+]
+
+const TOOLBAR_3 = [
+  {
+    label: OLIcon,
+    style: 'ordered-list-item'
+  }, {
+    label: ULIcon,
+    style: 'unordered-list-item'
+  }
+]
+
+export default class DocumentEditor extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -41,21 +106,37 @@ export default class TextEditor extends React.Component {
         48,
         60,
         72,
-        96,
+        96
       ],
       fontSize: 11,
+      docTitle: 'New Doc'
     };
-    this.onChange = editorState => this.setState({ editorState });
+    this.onChange = editorState => this.setState({editorState});
   }
 
-  _onTab = e => {
-          const maxDepth = 4;
-          this.onChange(RichUtils.onTab(e, this.state.editorState, maxDepth));
-        }
+  onInlineChange = (style) => (e) => {
+    e.preventDefault()
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, style))
+  };
+
+  onBlockChange = (style) => (e) => {
+    e.preventDefault()
+    this.onChange(RichUtils.toggleBlockType(this.state.editorState, style))
+  };
+
+  onSetStyle = (name, val) => (e) => {
+    e.preventDefault()
+    this.onChange(styles[name].toggle(this.state.editorState, val))
+  }
+
+  onTab = e => {
+    e.preventDefault();
+    const maxDepth = 4;
+    this.onChange(RichUtils.onTab(e, this.state.editorState, maxDepth));
+  }
 
   handleKeyCommand = command => {
     const newState = RichUtils.handleKeyCommand(this.state.editorState, command);
-
     if (newState) {
       this.onChange(newState);
       return 'handled';
@@ -63,127 +144,82 @@ export default class TextEditor extends React.Component {
     return 'not-handled';
   }
 
-  _onBoldClick = event => {
-    event.preventDefault();
-    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'BOLD'));
-  }
+handleTitleChange = event => {
+  this.setState({docTitle: event.target.value})
+}
 
-  _onItalicsClick = event => {
-    event.preventDefault();
-    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'ITALIC'));
+toggleFontSize(e, fontSize){
+  e.preventDefault();
+  if(!customStyleMap[fontSize]){
+    customStyleMap[fontSize] = {
+      fontSize: fontSize
+    }
   }
-
-  _onUnderlineClick = event => {
-    event.preventDefault();
-    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'UNDERLINE'));
-  }
-
-  _onHighlightClick = event => {
-    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'HIGHLIGHT'));
-  }
-
-  _onCodeClick = event => {
-    event.preventDefault();
-    this.onChange(RichUtils.toggleCode(this.state.editorState))
-  }
-
-  handleSizeChange = event => {
-    this.setState({ fontSize: event.target.value });
-  }
-
-  _onOrderedList = event => {
-    event.preventDefault();
-    this.onChange(RichUtils.toggleBlockType(this.state.editorState, 'ordered-list-item'))
-  }
-
-  _onUnorderedList = event => {
-    event.preventDefault();
-    this.onChange(RichUtils.toggleBlockType(this.state.editorState, 'unordered-list-item'))
-  }
+  this.setState({fontSize: fontSize})
+  return this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, fontSize));
+}
 
 
 
   render() {
-    const styles = {
-      content: {
-        flex: 1,
-      },
-      editor: {
-        height: '500px',
-        backgroundColor: 'white'
-      },
-    };
+    return (<div className='document-header'>
+      {/* <TextField
+        className='document-title'
+        style
+        placeholder={this.state.docTitle}
+        onChange={e => this.handleTitleChange(e)}
+        InputProps={{fontSize: 30}}
+        >
 
-    const styleMap = {
-      'HIGHLIGHT': {
-    backgroundColor: 'lightgreen'
-   }
- };
-    const selection = this.state.editorState.getSelection();
-    const blockType = this.state.editorState.getCurrentContent().getBlockForKey(selection.getStartKey()).getType();
+        </TextField> */}
+        <h1 className='document-title'>{this.state.docTitle}</h1>
+      <div className='document-toolbar'>
+        <Toolbar>
+          <Toolbar>
+            <TextField
+              select
+              className={'textField'}
+              value={this.state.fontSize}
+              InputProps={{
+              }}
+              onChange={e => this.toggleFontSize(e, e.target.value)}
+              >
+              {
+                this.state.fontRange.map(fontSize => (<MenuItem key={fontSize} value={fontSize}>
+                  {fontSize}
+                </MenuItem>))
+              }
+            </TextField>
+          </Toolbar>
+          <Toolbar>
+            {
+              TOOLBAR_1.map((button) => <IconButton onMouseDown={this.onInlineChange(button.style)} key={button.style}>
+                <button.label/>
+              </IconButton>)
+            }
+          </Toolbar>
+          <Toolbar>
+            {
+              TOOLBAR_2.map((button) => <IconButton onMouseDown={this.onBlockChange(button.style)} key={button.style}>
+                <button.label/>
+              </IconButton>)
+            }
+          </Toolbar>
+          <IconButton>
 
-    return (<div style={styles.content}>
-      <Toolbar>
-      <Toolbar>
-      <TextField
-        select="select"
-        className={'textField'}
-        value={this.state.fontSize}
-        onChange={this.handleSizeChange}
-        InputProps={{
-          startAdornment: <InputAdornment position="start" />,
-        }}
-      >
-        {
-          this.state.fontRange.map(option => (<MenuItem key={option} value={option}>
-            {option}
-          </MenuItem>))
-        }
-      </TextField>
-      </Toolbar>
-      <Toolbar>
-      <IconButton onMouseDown={this._onBoldClick}>
-        <BoldIcon />
-      </IconButton>
-      <IconButton onMouseDown={this._onItalicsClick}>
-        <ItalicIcon />
-      </IconButton>
-      <IconButton onMouseDown={this._onUnderlineClick}>
-        <UnderlineIcon />
-      </IconButton>
-      <IconButton onMouseDown={this._onCodeClick}>
-        <CodeIcon />
-      </IconButton>
-      <IconButton onMouseDown={this._onHighlightClick}>
-        <HighlightIcon />
-      </IconButton>
-      </Toolbar>
-      <IconButton>
-        <TextColorIcon />
-      </IconButton>
-      <TextField
-        select="select"
-        className={'textField'}
-        value={this.state.fontSize}
-        onChange={this.handleSizeChange}
-        InputProps={{
-          startAdornment: <InputAdornment position="start" />,
-        }}>
-        <MenuItem>
-          <TwitterPicker />
-        </MenuItem>
-      </TextField>
-      <Toolbar>
-      <IconButton onMouseDown={this._onOrderedList}>
-        <OLIcon />
-      </IconButton>
-      <IconButton onMouseDown={this._onUnorderedList}>
-        <ULIcon />
-      </IconButton>
-      </Toolbar>
-      </Toolbar>
-      <div style={styles.editor} className="editor">
-        <Editor  customStyleMap={styleMap} editorState={this.state.editorState} onChange={this.onChange} handleKeyCommand={this.handleKeyCommand} onTab={this._onTab}/>
+            <TextColorIcon/>
+          </IconButton>
+          <Toolbar>
+            {
+              TOOLBAR_3.map((button) => <IconButton onMouseDown={this.onBlockChange(button.style)} key={button.style}>
+                <button.label/>
+              </IconButton>)
+            }
+          </Toolbar>
+        </Toolbar>
+        <div className="editor">
+          <Editor customStyleMap={customStyleMap} editorState={this.state.editorState} onChange={this.onChange} handleKeyCommand={this.handleKeyCommand} onTab={this._onTab} blockStyleFn={getBlockStyle}/>
+        </div>
       </div>
     </div>);
   }
