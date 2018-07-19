@@ -16,11 +16,17 @@ body {
   border-top: solid 1px #ccc;
   padding: 5px;
   padding-left: 16px;
+  padding-right: 16px;
 }
 
 .document-toolbar {
   background-color: #FFF;
   border-radius: 6px;
+}
+
+.document-toolbar-group-first {
+  border-left: 1px solid lightGrey;
+  border-right: 1px solid lightGrey
 }
 
 .document-header {
@@ -32,7 +38,8 @@ body {
 }
 
 .document-title {
-  padding-left: 30px;
+  padding: 30px;
+  font-size: 30px;
 }
 
 .text-align-left {

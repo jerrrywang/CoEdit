@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Editor, EditorState, RichUtils} from 'draft-js';
+import {Editor, EditorState, RichUtils, Modifier} from 'draft-js';
 import {TwitterPicker} from 'react-color';
 import Fade from '@material-ui/core/Fade';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -16,6 +16,7 @@ import HighlightIcon from '@material-ui/icons/Highlight';
 import TextColorIcon from '@material-ui/icons/FormatColorText';
 import FontSizeIcon from '@material-ui/icons/FormatSize';
 import TextField from '@material-ui/core/TextField';
+import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import CodeIcon from '@material-ui/icons/Code';
@@ -33,6 +34,23 @@ const customStyleMap = {
   'HIGHLIGHT': {
     backgroundColor: 'lightgreen'
   },
+  'COLOR': {
+    color: 'red'
+  }
+
+}
+
+function isBlockStyle(style) {
+  if (style.indexOf('text-align-') === 0)
+    return true
+  return false
+}
+
+function getBlockStyle(block) {
+  const type = block.getType()
+  return isBlockStyle(type)
+    ? type
+    : null
 }
 
 //THIS FUNCTION WOULD BE A NECESSARY METHOD IF WE RENDERED ALL BUTTON IN ONE MAP
@@ -52,9 +70,6 @@ const TOOLBAR_1 = [
   }, {
     label: UnderlineIcon,
     style: 'UNDERLINE'
-  }, {
-    label: HighlightIcon,
-    style: 'HIGHLIGHT'
   }, {
     label: CodeIcon,
     style: 'CODE'
@@ -108,14 +123,15 @@ export default class DocumentEditor extends React.Component {
         72,
         96
       ],
-      fontSize: 11,
-      docTitle: 'New Doc'
+      fontSize: 14,
+      docTitle: 'New Doc',
+      anchorEl: null,
     };
     this.onChange = editorState => this.setState({editorState});
   }
 
   onInlineChange = (style) => (e) => {
-    e.preventDefault()
+    e.preventDefault();
     this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, style))
   };
 
@@ -124,15 +140,18 @@ export default class DocumentEditor extends React.Component {
     this.onChange(RichUtils.toggleBlockType(this.state.editorState, style))
   };
 
-  onSetStyle = (name, val) => (e) => {
-    e.preventDefault()
-    this.onChange(styles[name].toggle(this.state.editorState, val))
-  }
-
   onTab = e => {
     e.preventDefault();
-    const maxDepth = 4;
-    this.onChange(RichUtils.onTab(e, this.state.editorState, maxDepth));
+    const tabCharacter = '     ';
+    let newState = Modifier.replaceText(
+      this.state.editorState.getCurrentContent(),
+      this.state.editorState.getSelection(),
+      tabCharacter
+    );
+
+    this.setState({
+      editorState: EditorState.push(this.state.editorState, newState, 'insert-characters')
+    });
   }
 
   handleKeyCommand = command => {
@@ -144,46 +163,67 @@ export default class DocumentEditor extends React.Component {
     return 'not-handled';
   }
 
-handleTitleChange = event => {
-  this.setState({docTitle: event.target.value})
-}
-
-toggleFontSize(e, fontSize){
-  e.preventDefault();
-  if(!customStyleMap[fontSize]){
-    customStyleMap[fontSize] = {
-      fontSize: fontSize
-    }
+  handleTitleChange = event => {
+    this.setState({docTitle: event.target.value})
   }
-  this.setState({fontSize: fontSize})
-  return this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, fontSize));
-}
 
+  toggleFontSize(e, fontSize) {
+    e.preventDefault();
+    if (!customStyleMap[fontSize]) {
+      customStyleMap[fontSize] = {
+        fontSize: fontSize
+      }
+    }
+    this.setState({fontSize: fontSize})
+    return this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, fontSize));
+  }
 
+  onFontColorChange = color => {
+    console.log(color)
+    customStyleMap['COLOR'] =
+    {
+      color: color.hex
+    }
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'COLOR'))
+    this.handleClose();
+  }
+
+  onHighlightColorChange = color => {
+    console.log(color)
+    customStyleMap['HIGHLIGHT'] =
+    {
+      backgroundColor: color.hex
+    }
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'HIGHLIGHT'))
+    this.handleClose();
+  }
+
+  handleClick = event => {
+    this.setState({ anchorEl: event.currentTarget });
+  };
+
+  handleClose = () => {
+    this.setState({ anchorEl: null });
+  };
 
   render() {
+    const { anchorEl } = this.state;
     return (<div className='document-header'>
-      {/* <TextField
-        className='document-title'
-        style
-        placeholder={this.state.docTitle}
-        onChange={e => this.handleTitleChange(e)}
-        InputProps={{fontSize: 30}}
-        >
+      <TextField style={{
+          paddingLeft: 30,
+          paddingTop: 20,
+          paddingRight: 300
+        }} defaultValue={this.state.docTitle} onChange={e => this.handleTitleChange(e)} InputProps={{
+          style: {
+            fontSize: 30,
+            fontWeight: 'bold'
+          }
+        }}/>
+      <div >
+        <Toolbar className='document-toolbar'>
+          <Toolbar className='document-toolbar-group-first'>
 
-        </TextField> */}
-        <h1 className='document-title'>{this.state.docTitle}</h1>
-      <div className='document-toolbar'>
-        <Toolbar>
-          <Toolbar>
-            <TextField
-              select
-              className={'textField'}
-              value={this.state.fontSize}
-              InputProps={{
-              }}
-              onChange={e => this.toggleFontSize(e, e.target.value)}
-              >
+            <TextField select value={this.state.fontSize} onChange={e => this.toggleFontSize(e, e.target.value)}>
               {
                 this.state.fontRange.map(fontSize => (<MenuItem key={fontSize} value={fontSize}>
                   {fontSize}
@@ -191,12 +231,54 @@ toggleFontSize(e, fontSize){
               }
             </TextField>
           </Toolbar>
-          <Toolbar>
+          <Toolbar className='document-toolbar-group'>
             {
               TOOLBAR_1.map((button) => <IconButton onMouseDown={this.onInlineChange(button.style)} key={button.style}>
                 <button.label/>
               </IconButton>)
             }
+            <div>
+
+              <IconButton
+                aria-owns={anchorEl ? 'fontColor-menu' : null}
+                aria-haspopup="true"
+                onClick={this.handleClick}
+              >
+                <TextColorIcon />
+              </IconButton>
+
+              <Menu
+                select="select"
+                id="fontColor-menu"
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={this.handleClose}
+
+              >
+              <TwitterPicker onChangeComplete={ this.onFontColorChange }/>
+              </Menu>
+
+            </div>
+            <div>
+
+              <IconButton
+                aria-owns={anchorEl ? 'highlightColor-menu' : null}
+                aria-haspopup="true"
+                onClick={this.handleClick}
+              >
+                <HighlightIcon />
+              </IconButton>
+              <Menu
+                select="select"
+                id="highlightColor-menu"
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={this.handleClose}
+              >
+              <TwitterPicker onChangeComplete={ this.onHighlightColorChange }/>
+              </Menu>
+            </div>
+
           </Toolbar>
           <Toolbar>
             {
@@ -205,10 +287,6 @@ toggleFontSize(e, fontSize){
               </IconButton>)
             }
           </Toolbar>
-          <IconButton>
-
-            <TextColorIcon/>
-          </IconButton>
           <Toolbar>
             {
               TOOLBAR_3.map((button) => <IconButton onMouseDown={this.onBlockChange(button.style)} key={button.style}>
@@ -218,7 +296,7 @@ toggleFontSize(e, fontSize){
           </Toolbar>
         </Toolbar>
         <div className="editor">
-          <Editor customStyleMap={customStyleMap} editorState={this.state.editorState} onChange={this.onChange} handleKeyCommand={this.handleKeyCommand} onTab={this._onTab} blockStyleFn={getBlockStyle}/>
+          <Editor customStyleMap={customStyleMap} editorState={this.state.editorState} onChange={this.onChange} handleKeyCommand={this.handleKeyCommand} onTab={this.onTab} blockStyleFn={getBlockStyle}/>
         </div>
       </div>
     </div>);
