@@ -63,7 +63,7 @@ class Registration extends React.Component {
             }
         })
             .then(result => result.json())
-            .then(json => console.log(json))
+            .then(this.props.history.push('/login'))
             .catch(err => console.log(err))
     };
 

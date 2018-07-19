@@ -1,6 +1,6 @@
 import React from 'react';
-import openSocket from 'socket.io-client';
-const socket = openSocket('http://localhost:3000');
+import io from 'socket.io-client';
+const socket = io('http://localhost:3000');
 import {Editor,
     EditorState,
     RichUtils,
@@ -8,13 +8,22 @@ import {Editor,
     convertFromRaw} from 'draft-js';
 
 export default class TextEditor extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = { editorState: EditorState.createEmpty() };
-    }
+    state = {
+        editorState: EditorState.createEmpty()
+    };
 
     componentDidMount() {
-        socket.on('contentStateFromServer', rawContentState => {
+        if (!this.props.history.location.newDoc) {
+            socket.emit('findDoc', this.props.history.location.docId);
+            socket.on('foundDoc', res => {
+                const newEditorState = EditorState.createWithContent(convertFromRaw(res.contentState));
+                const currentSelection = this.state.editorState.getSelection();
+                this.setState({
+                    editorState: EditorState.forceSelection(newEditorState, currentSelection)
+                });
+            });
+        }
+        socket.on('liveContentStateFromServer', rawContentState => {
             const newEditorState = EditorState.createWithContent(convertFromRaw(rawContentState));
             const currentSelection = this.state.editorState.getSelection();
             this.setState({
@@ -24,9 +33,7 @@ export default class TextEditor extends React.Component {
     };
 
     onChange = (editorState) => {
-        const rawData = convertToRaw(editorState.getCurrentContent());
-        console.log("to send to server:", editorState);
-        socket.emit('contentState', rawData);
+        socket.emit('liveContentState', convertToRaw(editorState.getCurrentContent()));
         this.setState({editorState});
     };
 
@@ -34,6 +41,14 @@ export default class TextEditor extends React.Component {
         e.preventDefault();
         this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'BOLD'));
     }
+
+    onSave = () => {
+        socket.emit('saveContentState', {
+            rawContentState: convertToRaw(this.state.editorState.getCurrentContent()),
+            docId: this.props.history.location.docId
+        }, () => console.log("Saved!"))
+    };
+
     render() {
         const styles = {
             content: {
@@ -54,7 +69,7 @@ export default class TextEditor extends React.Component {
 
         return (
             <div style = {styles.container}>
-                <h2>Text editor!</h2>
+                <h2>Document {this.state.docId} </h2>
                 <div style = {styles.content}>
                     <button onMouseDown={(e) => this.onBoldClick(e)}>BOLD</button>
                     <div style = {styles.editor}>
@@ -63,6 +78,7 @@ export default class TextEditor extends React.Component {
                             onChange={this.onChange}
                         />
                     </div>
+                    <button onClick={this.onSave}>Save</button>
                 </div>
             </div>
         );
