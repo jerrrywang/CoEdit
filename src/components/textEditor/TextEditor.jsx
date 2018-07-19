@@ -13,8 +13,8 @@ export default class TextEditor extends React.Component {
     };
 
     componentDidMount() {
+        socket.emit('room', this.props.history.location.docId);
         if (!this.props.history.location.newDoc) {
-            socket.emit('findDoc', this.props.history.location.docId);
             socket.on('foundDoc', res => {
                 const newEditorState = EditorState.createWithContent(convertFromRaw(res.contentState));
                 const currentSelection = this.state.editorState.getSelection();
@@ -32,14 +32,8 @@ export default class TextEditor extends React.Component {
         });
     };
 
-    onChange = (editorState) => {
-        socket.emit('liveContentState', convertToRaw(editorState.getCurrentContent()));
-        this.setState({editorState});
-    };
-
-    onBoldClick(e) {
-        e.preventDefault();
-        this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'BOLD'));
+    componentWillUnmount() {
+        socket.emit('closeDoc', this.props.location.docId, () => console.log("Closed!"));
     }
 
     onSave = () => {
@@ -48,6 +42,19 @@ export default class TextEditor extends React.Component {
             docId: this.props.history.location.docId
         }, () => console.log("Saved!"))
     };
+
+    onChange = (editorState) => {
+        socket.emit('liveContentState', {
+            id: this.props.history.location.docId,
+            rawContentState: convertToRaw(editorState.getCurrentContent())
+        });
+        this.setState({editorState});
+    };
+
+    onBoldClick(e) {
+        e.preventDefault();
+        this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'BOLD'));
+    }
 
     render() {
         const styles = {
@@ -69,7 +76,7 @@ export default class TextEditor extends React.Component {
 
         return (
             <div style = {styles.container}>
-                <h2>Document {this.state.docId} </h2>
+                <h2>Document {this.props.history.location.docId} </h2>
                 <div style = {styles.content}>
                     <button onMouseDown={(e) => this.onBoldClick(e)}>BOLD</button>
                     <div style = {styles.editor}>

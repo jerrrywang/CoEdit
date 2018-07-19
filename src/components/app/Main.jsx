@@ -8,28 +8,13 @@ import { Switch, Route } from 'react-router-dom';
 class Main extends React.Component {
     render () {
         return (
-            <main>
                 <Switch>
-                    <Route path="/login"
-                           render={(props) =>
-                               (<Login {...props} passTitleToHeader = {this.props.passTitleToHeader} />)
-                           }
-                    />
-                    <Route path="/signup"
-                           render={(props) => (
-                               <Registration {...props} passTitleToHeader = {this.props.passTitleToHeader}/>
-                           )}
-                    />
-                    <Route path="/home"
-                           render={(props) => (
-                               <Home {...props} passTitleToHeader = {this.props.passTitleToHeader}/>
-                           )}
-                    />
-                    <Route path="/doc"
-                           component={TextEditor}
-                    />
+                    <Route path="/" component={Login} />
+                    <Route path="/login" component={Login} />
+                    <Route path="/signup" component={Registration} />
+                    <Route path="/home" component={Home} />
+                    <Route path="/doc" component={TextEditor} />
                 </Switch>
-            </main>
         )
     }
 };

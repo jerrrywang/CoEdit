@@ -41,9 +41,7 @@ class Registration extends React.Component {
         username: '',
         password: ''
     };
-    componentDidMount() {
-        this.props.passTitleToHeader("Registration");
-    }
+
     handleUsernameChange = e => {
         this.setState({username: e.target.value})
     };
@@ -63,7 +61,7 @@ class Registration extends React.Component {
             }
         })
             .then(result => result.json())
-            .then(this.props.history.push('/login'))
+            .then(this.props.history.push('/'))
             .catch(err => console.log(err))
     };
 

@@ -7,7 +7,7 @@ const passport      = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bodyParser    = require('body-parser');
 const logger        = require('morgan');
-const MongoStore = connectMongo(session);
+const MongoStore    = connectMongo(session);
 
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -17,15 +17,15 @@ import auth from './auth';
 
 mongoose.connect(process.env.MONGODB_URI);
 mongoose.connection.on('connected', () => {
-    console.log("Connected to MongoDB!")
+    console.log("Connected to MongoDB!");
 });
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(session({
     secret: process.env.SECRET,
-    store: new MongoStore({mongooseConnection: mongoose.connection}),
+    store: new MongoStore({ mongooseConnection: mongoose.connection }),
 }));
 
 passport.use('localStrategy', new LocalStrategy((username, password, done) => {
@@ -33,15 +33,12 @@ passport.use('localStrategy', new LocalStrategy((username, password, done) => {
         .then((user) => {
             if(user) {
                 if (password === user.password) {
-                    console.log("Matched user and pass");
                     return done(null, user);
                 } else {
-                    console.log("Did not match pass");
                     return done(null, false);
                 }
             }
             else {
-                console.log("Did not match user");
                 return done(null, false);
             }
         })
@@ -72,9 +69,9 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send("Hello World")
+    res.send("Hello World");
 });
 
-http.listen(3000, function(){
+http.listen(3000, () => {
     console.log('listening on *:3000');
 });

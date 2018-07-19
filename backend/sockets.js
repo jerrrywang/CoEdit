@@ -5,7 +5,10 @@ module.exports = (io) => {
     io.on('connection', client => {
         console.log('A user connected');
         client.on('disconnect', () => console.log('user disconnected'));
-        client.on('createDoc', (id) => {
+        client.on('room', id => {
+            client.join(id);
+        });
+        client.on('createDoc', id => {
             const newDoc = new Doc({
                 contentState: null,
                 users: id
@@ -21,11 +24,16 @@ module.exports = (io) => {
         });
         client.on('findAllDocs', () => {
             Doc.find()
-                .then(docs => io.emit('foundAllDocs', docs))
+                .then(docs => client.emit('foundAllDocs', docs))
                 .catch(err => console.log(err));
         });
-        client.on('liveContentState', rawContentState => {
-            io.emit('liveContentStateFromServer', rawContentState);
+        client.on('deleteDoc', (id, next) => {
+            Doc.deleteOne({ _id: id })
+                .then(next())
+                .catch(err => console.log(err));
+        });
+        client.on('liveContentState', data => {
+            io.to(data.id).emit('liveContentStateFromServer', data.rawContentState);
         });
         client.on('saveContentState', (saveInfo, next) => {
             Doc.findByIdAndUpdate(saveInfo.docId, {
@@ -33,6 +41,10 @@ module.exports = (io) => {
             })
                 .then(next())
                 .catch(err => console.log(err));
+        });
+        client.on('closeDoc', (id, next) => {
+            client.leave(id);
+            next();
         });
     });
 };
