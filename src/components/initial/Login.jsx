@@ -34,12 +34,17 @@ class Login extends React.Component {
             },
             credentials: 'same-origin'
         })
-            .then(result => result.json())
+            .then(result => {
+                console.log("result:", result);
+                return result.json()
+            })
             .then(json => {
+                console.log(json);
                 json.success ?
                     this.props.history.push({
                         pathname: '/home',
-                        username: json.userDetails.username})
+                        username: json.userDetails.username,
+                        id: json.userDetails.id})
                 :
                     this.props.history.push('/login')
             })

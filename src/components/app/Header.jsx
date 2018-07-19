@@ -83,14 +83,15 @@ class Header extends React.Component {
                                     open={open}
                                     onClose={this.handleClose}
                                 >
-                                    <MenuItem>
-                                        <Link to='/signup'>Signup</Link>
-                                    </MenuItem>
-
+                                    <Link to='/signup'>
+                                        <MenuItem>Signup</MenuItem>
+                                    </Link>
                                     <MenuItem>
                                         <Link to='/login'>Login</Link>
                                     </MenuItem>
-                                    <MenuItem onClick={this.handleClose}>My Documents</MenuItem>
+                                    <MenuItem>
+                                        <Link to='/home'>My Documents</Link>
+                                    </MenuItem>
                                     <MenuItem onClick={this.handleClose}>Logout</MenuItem>
                                 </Menu>
                             </div>

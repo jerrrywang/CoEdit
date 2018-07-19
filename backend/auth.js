@@ -24,12 +24,14 @@ const auth = passport => {
     });
     router.post('/login', (req, res, next) => {
             passport.authenticate('localStrategy', (error, user) => {
+                console.log(user);
                 user ?
                     res.status(200).json({
                         success: 'User authenticated!',
                         userDetails: {
                             id: user._id,
-                            username: user.username},
+                            username: user.username
+                        },
                     })
                 :
                     res.status(401).json({
