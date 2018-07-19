@@ -1,6 +1,9 @@
 import React from 'react';
-import Header from './app/Header';
-import Main from './app/Main';
+import Login from "./initial/Login";
+import TextEditor from "./textEditor/TextEditor";
+import Registration from "./initial/Registration";
+import Home from "./home/Home";
+import { Switch, Route } from 'react-router-dom';
 
 const styles = {
     main: {
@@ -12,23 +15,15 @@ const styles = {
 };
 
 class App extends React.Component {
-    state = {
-        title: ''
-    };
-
-    passTitleToHeader = (title) => {
-        this.setState({ title: title })
-    };
-
     render() {
         return (
-            <div>
-                <Header history={this.props.history} title={this.state.title}/>
-                <div style={styles.main}>
-                    <Main history={this.props.history} passTitleToHeader={this.passTitleToHeader}/>
-                </div>
-            </div>
-        )
+            <Switch>
+                <Route exact path="/" component={Login} />
+                <Route path="/signup" component={Registration} />
+                <Route path="/home" component={Home} />
+                <Route path="/doc" component={TextEditor} />
+            </Switch>
+        );
     }
 };
 

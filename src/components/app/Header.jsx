@@ -42,13 +42,13 @@ class Header extends React.Component {
     };
 
     onLogout = () => {
-        fetch('localhost:3000/logout')
+        fetch('http://localhost:3000/logout')
             .then(this.props.history.push('/login'))
     };
 
-    // componentDidMount() {
+    componentDidMount() {
     //     user exists ? this.setState({ auth: true }) : null
-    // }
+    }
 
     render() {
         const { classes } = this.props;
@@ -91,7 +91,7 @@ class Header extends React.Component {
                                 <Link to='/signup'>
                                     <MenuItem>Signup</MenuItem>
                                 </Link>
-                                <Link to='/login'>
+                                <Link to='/'>
                                     <MenuItem>Login</MenuItem>
                                 </Link>
                                 <Link to='/home'>
