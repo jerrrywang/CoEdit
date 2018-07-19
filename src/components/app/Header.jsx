@@ -41,6 +41,11 @@ class Header extends React.Component {
         this.setState({ anchorEl: null });
     };
 
+    onLogout = () => {
+        fetch('localhost:3000/logout')
+            .then(this.props.history.push('/login'))
+    };
+
     // componentDidMount() {
     //     user exists ? this.setState({ auth: true }) : null
     // }
@@ -60,41 +65,41 @@ class Header extends React.Component {
                         <Typography variant="title" color="inherit" className={classes.flex}>
                             {this.props.title}
                         </Typography>
-                            <div>
-                                <IconButton
-                                    aria-owns={open ? 'menu-appbar' : null}
-                                    aria-haspopup="true"
-                                    onClick={this.handleMenu}
-                                    color="inherit"
-                                >
-                                    <AccountCircle />
-                                </IconButton>
-                                <Menu
-                                    id="menu-appbar"
-                                    anchorEl={anchorEl}
-                                    anchorOrigin={{
-                                        vertical: 'top',
-                                        horizontal: 'right',
-                                    }}
-                                    transformOrigin={{
-                                        vertical: 'top',
-                                        horizontal: 'right',
-                                    }}
-                                    open={open}
-                                    onClose={this.handleClose}
-                                >
-                                    <Link to='/signup'>
-                                        <MenuItem>Signup</MenuItem>
-                                    </Link>
-                                    <MenuItem>
-                                        <Link to='/login'>Login</Link>
-                                    </MenuItem>
-                                    <MenuItem>
-                                        <Link to='/home'>My Documents</Link>
-                                    </MenuItem>
-                                    <MenuItem onClick={this.handleClose}>Logout</MenuItem>
-                                </Menu>
-                            </div>
+                        <div>
+                            <IconButton
+                                aria-owns={open ? 'menu-appbar' : null}
+                                aria-haspopup="true"
+                                onClick={this.handleMenu}
+                                color="inherit"
+                            >
+                                <AccountCircle />
+                            </IconButton>
+                            <Menu
+                                id="menu-appbar"
+                                anchorEl={anchorEl}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={open}
+                                onClose={this.handleClose}
+                            >
+                                <Link to='/signup'>
+                                    <MenuItem>Signup</MenuItem>
+                                </Link>
+                                <Link to='/login'>
+                                    <MenuItem>Login</MenuItem>
+                                </Link>
+                                <Link to='/home'>
+                                    <MenuItem>My Documents</MenuItem>
+                                </Link>
+                                <MenuItem onClick={this.onLogout}>Logout</MenuItem>
+                            </Menu>
+                        </div>
                     </Toolbar>
                 </AppBar>
             </div>

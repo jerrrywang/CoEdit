@@ -6,7 +6,7 @@ const docSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     }],
-}, {minimize: false});
+}, { minimize: false });
 
 const Doc = mongoose.model('Doc', docSchema);
 

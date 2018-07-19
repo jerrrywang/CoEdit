@@ -25,7 +25,7 @@ class App extends React.Component {
             <div>
                 <Header history={this.props.history} title={this.state.title}/>
                 <div style={styles.main}>
-                    <Main passTitleToHeader={this.passTitleToHeader}/>
+                    <Main history={this.props.history} passTitleToHeader={this.passTitleToHeader}/>
                 </div>
             </div>
         )
