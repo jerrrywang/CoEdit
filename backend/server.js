@@ -64,8 +64,7 @@ app.use('/', auth(passport));
 require('./sockets.js')(io);
 
 app.get('/logout', (req, res) => {
-    req.logout();
-    res.redirect('/');
+    req.session.destroy(err => res.end());
 });
 
 app.get('/', (req, res) => {

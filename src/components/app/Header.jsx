@@ -1,12 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
+import HomeIcon from '@material-ui/icons/Description'
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import AccountCircle from '@material-ui/icons/AccountCircle';
@@ -19,8 +18,7 @@ const styles = {
     flex: {
         flexGrow: 1,
     },
-    menuButton: {
-        marginLeft: -12,
+    homeButton: {
         marginRight: 20,
     },
 };
@@ -28,9 +26,6 @@ const styles = {
 class Header extends React.Component {
     state = {
         anchorEl: null
-    };
-    handleChange = (event, checked) => {
-        this.setState({ auth: checked });
     };
 
     handleMenu = event => {
@@ -42,26 +37,25 @@ class Header extends React.Component {
     };
 
     onLogout = () => {
-        fetch('http://localhost:3000/logout')
-            .then(this.props.history.push('/login'))
+        fetch('http://localhost:3000/logout', {
+            credentials: 'same-origin'
+        })
+            .then((res) => {
+                localStorage.removeItem('user');
+                this.props.history.push('/')
+            })
     };
-
-    componentDidMount() {
-    //     user exists ? this.setState({ auth: true }) : null
-    }
 
     render() {
         const { classes } = this.props;
-        const { auth, anchorEl } = this.state;
+        const { anchorEl } = this.state;
         const open = Boolean(anchorEl);
 
         return (
             <div className={classes.root}>
                 <AppBar position="static">
                     <Toolbar>
-                        <IconButton className={classes.menuButton} color="inherit" aria-label="Menu">
-                            <MenuIcon />
-                        </IconButton>
+                        <HomeIcon style={styles.homeButton}/>
                         <Typography variant="title" color="inherit" className={classes.flex}>
                             {this.props.title}
                         </Typography>

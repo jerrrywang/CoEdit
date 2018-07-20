@@ -11,7 +11,8 @@ const styles = {
         height: '100vh',
         display: 'flex',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        background: '#f4f4f4'
     },
     card: {
         minWidth: 500,
@@ -66,14 +67,13 @@ class Login extends React.Component {
         })
             .then(result => result.json())
             .then(json => {
-                json.success ?
-                    this.props.history.push({
-                        pathname: '/home',
+                if (json.success) {
+                    localStorage.setItem('user', JSON.stringify({
                         username: json.userDetails.username,
                         id: json.userDetails.id
-                    })
-                    :
-                    null
+                    }));
+                    this.props.history.push('/home');
+                }
             })
             .catch(err => console.log(err))
     };
