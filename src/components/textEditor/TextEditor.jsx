@@ -15,6 +15,7 @@ export default class TextEditor extends React.Component {
     componentDidMount() {
         socket.emit('room', this.props.history.location.docId);
         if (!this.props.history.location.newDoc) {
+            socket.emit('findDoc', this.props.history.location.docId);
             socket.on('foundDoc', res => {
                 const newEditorState = EditorState.createWithContent(convertFromRaw(res.contentState));
                 const currentSelection = this.state.editorState.getSelection();

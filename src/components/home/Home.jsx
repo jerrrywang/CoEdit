@@ -1,17 +1,18 @@
 import React from 'react';
-import openSocket from "socket.io-client";
 import Header from '../app/Header';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import Divider from '@material-ui/core/Divider';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
 import DocsIcon from '@material-ui/icons/LibraryBooks'
-import IconButton from '@material-ui/core/IconButton';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Typography from '@material-ui/core/Typography';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import EditIcon from '@material-ui/icons/Edit'
+import DeleteIcon from '@material-ui/icons/Delete'
+import openSocket from "socket.io-client";
 const socket = openSocket('http://localhost:3000');
 
 const styles = {
@@ -19,32 +20,22 @@ const styles = {
         background: '#eee',
         height: '100vh'
     },
-    main: {
+    container: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center'
     },
-    container: {
-        width: '80%',
+    main: {
         display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        background: '#fff',
+        flexDirection: 'column',
+        width: '80%',
         marginTop: 60
     },
-    list: {
-        maxWidth: '100%',
-        width: 1130,
-        minWidth: 670,
-        paddingTop: 0,
-        paddingBottom: 0
-    },
-    listItem: {
-        height: 50,
-        width: '100%',
+    docsIcon: {
+        marginRight: 15
     },
     title: {
-        fontWeight: 500
+        fontSize: 16
     },
     add: {
         position: 'absolute',
@@ -53,16 +44,22 @@ const styles = {
     }
 };
 
-const options = [
-    'Rename',
-    'Delete'
-];
+const matStyles = theme => ({
+    heading: {
+        fontSize: theme.typography.pxToRem(15),
+        flexBasis: '33.33%',
+        flexShrink: 0,
+    },
+    secondaryHeading: {
+        fontSize: theme.typography.pxToRem(15),
+        color: theme.palette.text.secondary,
+    },
+});
 let user = null;
-
 class Home extends React.Component {
     state = {
         docs: [],
-        anchorEl: null
+        expanded: null
     };
 
     componentDidMount() {
@@ -77,7 +74,10 @@ class Home extends React.Component {
         }
     }
     create = () => {
-        socket.emit('createDoc', user.id);
+        socket.emit('createDoc', {
+            id: user.id,
+            username: user.username
+        });
         socket.on('createdDoc', (res) => {
             this.props.history.push({
                 pathname: '/doc',
@@ -94,15 +94,10 @@ class Home extends React.Component {
             id: user.id
         });
     };
-    handleClick = event => {
-        this.setState({ anchorEl: event.currentTarget });
-    };
-
-    handleClose = () => {
-        this.setState({ anchorEl: null });
-    };
-    handleMenu = (option, id) => {
-        option === 'Delete' ? this.deleteDoc(id) : null
+    handleChange = panel => (event, expanded) => {
+        this.setState({
+            expanded: expanded ? panel : false,
+        });
     };
     deleteDoc = (id) => {
         socket.emit('deleteDoc', id, () => {
@@ -111,50 +106,34 @@ class Home extends React.Component {
     };
 
     render() {
+        const { classes } = this.props;
+        const { expanded } = this.state;
         return(
             <div style={styles.div}>
                 <Header history={this.props.history} title='Docs'/>
-                <div style={styles.main}>
-                    <div style={styles.container}>
-                        <List component="nav" style={styles.list}>
-                            {this.state.docs.map(doc => (
-                                <div key={doc._id}>
-                                    <ListItem button style={styles.listItem}>
-                                        <DocsIcon />
-                                        <ListItemText style={styles.title} primary={doc._id} onClick={() => this.openDoc(doc)} />
-                                        <div>
-                                            <IconButton
-                                                aria-label="More"
-                                                aria-owns={this.state.anchorEl ? 'long-menu' : null}
-                                                aria-haspopup="true"
-                                                onClick={this.handleClick}
-                                            >
-                                                <MoreVertIcon />
-                                            </IconButton>
-                                            <Menu
-                                                id="long-menu"
-                                                anchorEl={this.state.anchorEl}
-                                                open={Boolean(this.state.anchorEl)}
-                                                onClose={this.handleClose}
-                                                PaperProps={{
-                                                    style: {
-                                                        maxHeight: 48 * 4.5,
-                                                        width: 200,
-                                                    },
-                                                }}
-                                            >
-                                                {options.map(option =>
-                                                    <MenuItem key={option} onClick={() => this.handleMenu(option, doc._id)}>
-                                                        {option}
-                                                    </MenuItem>
-                                                )}
-                                            </Menu>
-                                        </div>
-                                    </ListItem>
-                                    <Divider />
-                                </div>
-                            ))}
-                        </List>
+                <div style={styles.container}>
+                    <div style={styles.main}>
+                        {this.state.docs.map(doc => (
+                            <ExpansionPanel expanded={expanded === doc._id} onChange={this.handleChange(doc._id)}>
+                                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                                    <DocsIcon style={styles.docsIcon}/>
+                                    <Typography style={styles.title} className={classes.heading}>
+                                        {doc.title}
+                                    </Typography>
+                                    <Typography className={classes.secondaryHeading}>{`Author: ${doc.owner}`}</Typography>
+                                </ExpansionPanelSummary>
+                                <ExpansionPanelDetails>
+                                    <Typography>
+                                        {`Created: ${(new Date(doc.dateCreated)).toDateString()}`}
+                                    </Typography>
+                                    <Typography>
+                                        {`Last modified: ${(new Date(doc.dateModified)).toDateString()}`}
+                                    </Typography>
+                                    <Button onClick={() => this.openDoc(doc)}><EditIcon /></Button>
+                                    <Button onClick={() => this.deleteDoc(doc._id)}><DeleteIcon /></Button>
+                                </ExpansionPanelDetails>
+                            </ExpansionPanel>
+                        ))}
                     </div>
                 </div>
                 <Button variant="fab" color="primary" aria-label="Add" onClick={this.create} style={styles.add}>
@@ -165,4 +144,50 @@ class Home extends React.Component {
     }
 };
 
-export default Home;
+Home.propTypes = {
+    classes: PropTypes.object.isRequired,
+};
+
+export default withStyles(matStyles)(Home);
+
+
+{/*<div key={doc._id}>*/}
+{/*<ListItem button style={styles.listItem}>*/}
+{/*<DocsIcon />*/}
+{/*<ListItemText style={styles.title}*/}
+{/*primary={doc.title}*/}
+{/*secondary={`Author: ${doc.owner}`}*/}
+{/*onClick={() => this.openDoc(doc)}>*/}
+{/*{(new Date(doc.dateModified)).toDateString()}*/}
+{/*</ListItemText>*/}
+{/*<div>*/}
+{/*<IconButton*/}
+{/*aria-label="More"*/}
+{/*aria-owns={this.state.anchorEl ? 'long-menu' : null}*/}
+{/*aria-haspopup="true"*/}
+{/*onClick={this.handleClick}*/}
+{/*>*/}
+{/*<MoreVertIcon />*/}
+{/*</IconButton>*/}
+{/*<Menu*/}
+{/*id="long-menu"*/}
+{/*anchorEl={this.state.anchorEl}*/}
+{/*open={Boolean(this.state.anchorEl)}*/}
+{/*onClose={this.handleClose}*/}
+{/*PaperProps={{*/}
+{/*style: {*/}
+{/*maxHeight: 48 * 4.5,*/}
+{/*width: 200,*/}
+{/*},*/}
+{/*}}*/}
+{/*>*/}
+{/*{options.map(option =>*/}
+{/*<MenuItem key={option} onClick={() => this.handleMenu(option, doc._id)}>*/}
+{/*{option}*/}
+{/*</MenuItem>*/}
+{/*)}*/}
+{/*</Menu>*/}
+{/*</div>*/}
+{/*</ListItem>*/}
+{/*<Divider />*/}
+{/*</div>*/}
