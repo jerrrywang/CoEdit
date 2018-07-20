@@ -35,8 +35,9 @@ const styles = {
     },
     actions: {
         marginTop: 50,
-        display: 'flex',
-        flexDirection: 'row'
+        display: 'block',
+        flexDirection: 'row',
+        textAlign: 'right'
     }
 };
 
@@ -78,6 +79,12 @@ class Login extends React.Component {
             .catch(err => console.log(err))
     };
 
+    handleRegistration = e => {
+      e.preventDefault()
+      this.props.history.push('/signup')
+    };
+
+
     render() {
         return (
             <div style={styles.container}>
@@ -105,7 +112,10 @@ class Login extends React.Component {
                                        style={styles.input}
                             />
                             <CardActions style={styles.actions}>
-                                <Button color="primary">
+                                <Button
+                                  color="primary"
+                                  onClick={this.handleRegistration}
+                                  >
                                     Create account
                                 </Button>
                                 <Button variant="contained"

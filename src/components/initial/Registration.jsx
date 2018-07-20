@@ -34,9 +34,10 @@ const styles = {
         marginTop: 30
     },
     actions: {
-        marginTop: 50,
-        display: 'flex',
-        flexDirection: 'row'
+      marginTop: 50,
+      display: 'block',
+      flexDirection: 'row',
+      textAlign: 'right'
     }
 };
 
@@ -69,6 +70,11 @@ class Registration extends React.Component {
             .catch(err => console.log(err))
     };
 
+    handleGoBack = e => {
+      e.preventDefault()
+      this.props.history.push('/')
+    };
+
     render() {
         return (
             <div style={styles.container}>
@@ -96,7 +102,10 @@ class Registration extends React.Component {
                                        style={styles.input}
                             />
                             <CardActions style={styles.actions}>
-                                <Button color="primary">
+                                <Button
+                                  color="primary"
+                                  onClick={this.handleGoBack}
+                                  >
                                     Login instead
                                 </Button>
                                 <Button variant="contained"
