@@ -1,7 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Editor, EditorState, RichUtils, Modifier} from 'draft-js';
+import {
+  Editor,
+  EditorState,
+  RichUtils,
+  Modifier,
+  convertToRaw,
+  convertFromRaw
+} from 'draft-js';
+import io from 'socket.io-client';
+const socket = io('http://localhost:3000');
 import SystemFonts from 'system-font-families';
+const systemFonts = new SystemFonts();
+const fontList = systemFonts.getFontsSync();
 import Typography from '@material-ui/core/Typography';
 import {TwitterPicker} from 'react-color';
 import Fade from '@material-ui/core/Fade';
@@ -28,9 +39,8 @@ import TextLeftIcon from '@material-ui/icons/FormatAlignLeft';
 import TextRightIcon from '@material-ui/icons/FormatAlignRight';
 import TextCenterIcon from '@material-ui/icons/FormatAlignCenter';
 import JustifyIcon from '@material-ui/icons/FormatAlignJustify';
-
-const systemFonts = new SystemFonts();
-const fontList = systemFonts.getFontsSync();
+import SaveIcon from '@material-ui/icons/Save';
+import DocIcon from '@material-ui/icons/Description'
 
 const customStyleMap = {
   remoteCursor: {
@@ -41,7 +51,7 @@ const customStyleMap = {
   },
   'COLOR': {
     color: 'red'
-  },
+  }
 }
 
 function isBlockStyle(style) {
@@ -132,11 +142,48 @@ export default class DocumentEditor extends React.Component {
       fontType: 'Roboto',
       docTitle: 'New Doc',
       anchorEl: null,
-      anchorEl2: null,
+      anchorEl2: null
     };
-    this.onChange = editorState => this.setState({editorState});
   }
 
+  componentDidMount() {
+    socket.emit('room', this.props.history.location.docId);
+    if (!this.props.history.location.newDoc) {
+      socket.on('foundDoc', res => {
+        const newEditorState = EditorState.createWithContent(convertFromRaw(res.contentState));
+        const currentSelection = this.state.editorState.getSelection();
+        this.setState({
+          editorState: EditorState.forceSelection(newEditorState, currentSelection)
+        });
+      });
+    }
+    socket.on('liveContentStateFromServer', rawContentState => {
+      const newEditorState = EditorState.createWithContent(convertFromRaw(rawContentState));
+      const currentSelection = this.state.editorState.getSelection();
+      this.setState({
+        editorState: EditorState.forceSelection(newEditorState, currentSelection)
+      });
+    });
+  };
+
+  componentWillUnmount() {
+    socket.emit('closeDoc', this.props.location.docId, () => console.log("Closed!"));
+  }
+
+  onChange = (editorState) => {
+    socket.emit('liveContentState', {
+      id: this.props.history.location.docId,
+      rawContentState: convertToRaw(editorState.getCurrentContent())
+    });
+    this.setState({editorState});
+  };
+
+  onSave = () => {
+    socket.emit('saveContentState', {
+      rawContentState: convertToRaw(this.state.editorState.getCurrentContent()),
+      docId: this.props.history.location.docId
+    }, () => console.log("Saved!"))
+  };
 
   onInlineChange = (e, style) => {
     e.preventDefault();
@@ -151,11 +198,7 @@ export default class DocumentEditor extends React.Component {
   onTab = e => {
     e.preventDefault();
     const tabCharacter = '     ';
-    let newState = Modifier.replaceText(
-      this.state.editorState.getCurrentContent(),
-      this.state.editorState.getSelection(),
-      tabCharacter
-    );
+    let newState = Modifier.replaceText(this.state.editorState.getCurrentContent(), this.state.editorState.getSelection(), tabCharacter);
 
     this.setState({
       editorState: EditorState.push(this.state.editorState, newState, 'insert-characters')
@@ -199,63 +242,62 @@ export default class DocumentEditor extends React.Component {
 
   onFontColorChange = color => {
     console.log(color)
-    customStyleMap['COLOR'] =
-    {
-      color: color.hex
-    }
-    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'COLOR'))
+      customStyleMap[color.hex] = {
+        color: color.hex
+      }
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, color.hex))
     this.handleColorClose();
   }
 
   onHighlightColorChange = color => {
-    console.log(color)
-    customStyleMap['HIGHLIGHT'] =
-    {
-      backgroundColor: color.hex
-    }
-    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'HIGHLIGHT'))
+      customStyleMap[color.hex] = {
+        backgroundColor: color.hex
+      }
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, color.hex))
     this.handleHighlightClose();
   }
 
   handleColorClick = event => {
-    this.setState({ anchorEl: event.currentTarget });
+    this.setState({anchorEl: event.currentTarget});
   };
 
   handleHighlightClick = event => {
-    this.setState({ anchorEl2: event.currentTarget });
+    this.setState({anchorEl2: event.currentTarget});
   };
 
   handleColorClose = () => {
-    this.setState({ anchorEl: null });
+    this.setState({anchorEl: null});
   };
 
   handleHighlightClose = () => {
-    this.setState({ anchorEl2: null });
+    this.setState({anchorEl2: null});
   };
 
   render() {
-    const { anchorEl } = this.state;
-    const { anchorEl2 } = this.state;
-    return (<div className='document-header'>
+    const {anchorEl} = this.state;
+    const {anchorEl2} = this.state;
+    return (<div>
+      <div className='document-header' style={{display:'flex', flexDirection: 'row', alignItems: 'center'}}>
+      <IconButton style={{margin: 10}} onClick={this.props.history.goBack}><DocIcon/></IconButton>
       <TextField style={{
-          paddingLeft: 30,
-          paddingTop: 20,
-          paddingRight: 300,
-        }} defaultValue={this.state.docTitle} onInput={e => this.handleTitleChange(e)}
-        placeholder='Untitled Document'
-        InputProps={{
+          paddingLeft: 0,
+          paddingTop: 0,
+          paddingRight: 300
+        }} defaultValue={this.state.docTitle} onInput={e => this.handleTitleChange(e)} placeholder='Untitled Document' InputProps={{
           style: {
             fontSize: 30,
             fontWeight: 'bold'
           }
         }}/>
-      <div >
+      </div>
+      <div>
         <Toolbar className='document-toolbar'>
-
           <Toolbar className='document-toolbar-group'>
-            <TextField select style={{paddingRight: 15}} value={this.state.fontType} placeholder='Roboto' onChange={e => this.toggleFont(e, e.target.value)}>
+            <TextField select style={{
+                paddingRight: 15
+              }} value={this.state.fontType} placeholder='Roboto' onChange={e => this.toggleFont(e, e.target.value)}>
               {
-                this.state.fontArray.map((font,i) => (<MenuItem key={font} value={i}>
+                this.state.fontArray.map((font, i) => (<MenuItem key={font} value={i}>
                   {font}
                 </MenuItem>))
               }
@@ -263,7 +305,7 @@ export default class DocumentEditor extends React.Component {
 
             <TextField select value={this.state.fontSize} onChange={e => this.toggleFontSize(e, e.target.value)}>
               {
-                this.state.fontRange.map((fontSize,i) => (<MenuItem key={fontSize} value={fontSize}>
+                this.state.fontRange.map((fontSize, i) => (<MenuItem key={fontSize} value={fontSize}>
                   {fontSize}
                 </MenuItem>))
               }
@@ -271,75 +313,62 @@ export default class DocumentEditor extends React.Component {
           </Toolbar>
           <Toolbar className='document-toolbar-group'>
             {
-              TOOLBAR_1.map((button) => <IconButton
-                onMouseDown={(e) => this.onInlineChange(e, button.style)} key={button.style}
-                style={{backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style) ? '#E8E8E8' : '#FFFFFF'}}
-                >
+              TOOLBAR_1.map((button) => <IconButton onMouseDown={(e) => this.onInlineChange(e, button.style)} key={button.style} style={{
+                  backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style)
+                    ? '#E8E8E8'
+                    : '#FFFFFF'
+                }}>
                 <button.label/>
               </IconButton>)
             }
             <div>
 
-              <IconButton
-                aria-owns={anchorEl ? 'fontColor-menu' : null}
-                aria-haspopup="true"
-                onClick={this.handleColorClick}
-              >
-                <TextColorIcon />
+              <IconButton aria-owns={anchorEl
+                  ? 'fontColor-menu'
+                  : null} aria-haspopup="true" onClick={this.handleColorClick}>
+                <TextColorIcon/>
               </IconButton>
 
-              <Menu
-                select="select"
-                id="fontColor-menu"
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={this.handleColorClose}
-
-              >
-              <TwitterPicker onChangeComplete={ this.onFontColorChange }/>
+              <Menu select="select" id="fontColor-menu" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={this.handleColorClose}>
+                <TwitterPicker onChangeComplete={this.onFontColorChange}/>
               </Menu>
 
             </div>
             <div>
 
-              <IconButton
-                aria-owns={anchorEl2 ? 'highlightColor-menu' : null}
-                aria-haspopup="true"
-                onClick={this.handleHighlightClick}>
-                <HighlightIcon />
+              <IconButton aria-owns={anchorEl2
+                  ? 'highlightColor-menu'
+                  : null} aria-haspopup="true" onClick={this.handleHighlightClick}>
+                <HighlightIcon/>
               </IconButton>
-              <Menu
-                select="select"
-                id="highlightColor-menu"
-                anchorEl={anchorEl2}
-                open={Boolean(anchorEl2)}
-                onClose={this.handleHighlightClose}
-              >
-              <TwitterPicker onChangeComplete={ this.onHighlightColorChange }/>
+              <Menu select="select" id="highlightColor-menu" anchorEl={anchorEl2} open={Boolean(anchorEl2)} onClose={this.handleHighlightClose}>
+                <TwitterPicker onChangeComplete={this.onHighlightColorChange}/>
               </Menu>
             </div>
 
           </Toolbar>
           <Toolbar className='document-toolbar-group'>
             {
-              TOOLBAR_2.map((button) => <IconButton
-                onMouseDown={(e) => this.onBlockChange(e, button.style)}
-                key={button.style}
-                style={{backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style) ? '#E8E8E8' : '#FFFFFF'}}
-                >
+              TOOLBAR_2.map((button) => <IconButton onMouseDown={(e) => this.onBlockChange(e, button.style)} key={button.style} style={{
+                  backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style)
+                    ? '#E8E8E8'
+                    : '#FFFFFF'
+                }}>
                 <button.label/>
               </IconButton>)
             }
           </Toolbar>
           <Toolbar>
             {
-              TOOLBAR_3.map((button) => <IconButton
-                onMouseDown={(e) => this.onBlockChange(e, button.style)} key={button.style}
-                style={{backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style) ? '#E8E8E8' : '#FFFFFF'}}
-                >
+              TOOLBAR_3.map((button) => <IconButton onMouseDown={(e) => this.onBlockChange(e, button.style)} key={button.style} style={{
+                  backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style)
+                    ? '#E8E8E8'
+                    : '#FFFFFF'
+                }}>
                 <button.label/>
               </IconButton>)
             }
+            <IconButton onClick={this.onSave}><SaveIcon /></IconButton>
           </Toolbar>
         </Toolbar>
         <div className="editor">

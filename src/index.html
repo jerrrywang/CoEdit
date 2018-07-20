@@ -8,17 +8,17 @@
   <link rel='stylesheet' href='index.css'/>
 </head>
 <body>
-  <div id="App"></div>
+  <div id='Browser'></div>
 </body>
 
 <script type="text/jsx">
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {AppContainer} from 'react-hot-loader';
+import Browser from './Browser'
 
 const render = () => {
-  const App = require('./app').default;
-  ReactDOM.render(<AppContainer><App /></AppContainer>, document.getElementById('App'));
+  ReactDOM.render(<AppContainer><Browser /></AppContainer>, document.getElementById('Browser'));
 }
 
 render();
