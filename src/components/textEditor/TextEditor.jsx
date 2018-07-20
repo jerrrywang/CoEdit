@@ -76,6 +76,7 @@ export default class TextEditor extends React.Component {
 
         return (
             <div style = {styles.container}>
+                <button onClick={this.props.history.goBack}>Back</button>
                 <h2>Document {this.props.history.location.docId} </h2>
                 <div style = {styles.content}>
                     <button onMouseDown={(e) => this.onBoldClick(e)}>BOLD</button>

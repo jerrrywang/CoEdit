@@ -1,6 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
@@ -9,6 +7,12 @@ import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 
 const styles = {
+    container: {
+        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
     card: {
         minWidth: 500,
         maxWidth: 750,
@@ -66,57 +70,49 @@ class Registration extends React.Component {
     };
 
     render() {
-        const { classes } = this.props;
         return (
-            <Card style={styles.card}>
-                <CardContent>
-                    <Typography style={styles.header} variant="headline" component="h1">
-                        Create your Account
-                    </Typography>
-                    <form className = {classes.container}
-                          style={styles.form}>
-                        <TextField type = 'text'
-                                   label = 'Username'
-                                   name = 'username'
-                                   className={classes.textField}
-                                   margin="normal"
-                                   value = {this.state.username}
-                                   onChange = {(e) => this.handleUsernameChange(e)}
-                                   style={styles.input}
-                        />
-                        <TextField type = 'text'
-                                   label = 'Password'
-                                   name = 'password'
-                                   className={classes.textField}
-                                   type="password"
-                                   margin="normal"
-                                   value = {this.state.password}
-                                   onChange = {(e) => this.handlePasswordChange(e)}
-                                   style={styles.input}
-                        />
-                        <CardActions style={styles.actions}>
-                            <Button color="primary"
-                                    className={classes.button}>
-                                Login Instead
-                            </Button>
-                            <Button variant="contained"
-                                    aria-label="Registration"
-                                    onClick={(e) => this.handleSubmit(e)}
-                                    className={classes.button}
-                                    color="primary"
-                            >
-                                Register
-                            </Button>
-                        </CardActions>
-                    </form>
-                </CardContent>
-            </Card>
+            <div style={styles.container}>
+                <Card style={styles.card}>
+                    <CardContent>
+                        <Typography style={styles.header} variant="headline" component="h1">
+                            Create your account
+                        </Typography>
+                        <form style={styles.form}>
+                            <TextField type = 'text'
+                                       label = 'Username'
+                                       name = 'username'
+                                       margin="normal"
+                                       value = {this.state.username}
+                                       onChange = {(e) => this.handleUsernameChange(e)}
+                                       style={styles.input}
+                            />
+                            <TextField type = 'text'
+                                       label = 'Password'
+                                       name = 'password'
+                                       type="password"
+                                       margin="normal"
+                                       value = {this.state.password}
+                                       onChange = {(e) => this.handlePasswordChange(e)}
+                                       style={styles.input}
+                            />
+                            <CardActions style={styles.actions}>
+                                <Button color="primary">
+                                    Login instead
+                                </Button>
+                                <Button variant="contained"
+                                        aria-label="Login"
+                                        onClick={(e) => this.handleSubmit(e)}
+                                        color="primary"
+                                >
+                                    Create
+                                </Button>
+                            </CardActions>
+                        </form>
+                    </CardContent>
+                </Card>
+            </div>
         )
     }
 }
 
-Registration.propTypes = {
-    classes: PropTypes.object.isRequired,
-};
-
-export default withStyles(styles)(Registration);
+export default Registration;
