@@ -29,6 +29,10 @@ body {
   border-right: 1px solid lightGrey
 }
 
+.document-toolbar-group {
+  border-right: 1px solid lightGrey
+}
+
 .document-header {
   font-family: Roboto;
   display: flex;

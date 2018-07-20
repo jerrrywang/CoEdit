@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Editor, EditorState, RichUtils, Modifier} from 'draft-js';
+import SystemFonts from 'system-font-families';
+import Typography from '@material-ui/core/Typography';
 import {TwitterPicker} from 'react-color';
 import Fade from '@material-ui/core/Fade';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -27,6 +29,9 @@ import TextRightIcon from '@material-ui/icons/FormatAlignRight';
 import TextCenterIcon from '@material-ui/icons/FormatAlignCenter';
 import JustifyIcon from '@material-ui/icons/FormatAlignJustify';
 
+const systemFonts = new SystemFonts();
+const fontList = systemFonts.getFontsSync();
+
 const customStyleMap = {
   remoteCursor: {
     borderLeft: 'solid 3px lightGrey'
@@ -36,8 +41,7 @@ const customStyleMap = {
   },
   'COLOR': {
     color: 'red'
-  }
-
+  },
 }
 
 function isBlockStyle(style) {
@@ -53,7 +57,7 @@ function getBlockStyle(block) {
     : null
 }
 
-//THIS FUNCTION WOULD BE A NECESSARY METHOD IF WE RENDERED ALL BUTTON IN ONE MAP
+//THIS FUNCTION WOULD BE A NECESSARY METHOD IF WE RENDERED ALL BUTTONS IN ONE MAP
 // onStyleChange = (style) => (e) => {
 //    e.preventDefault()
 //    const toggleFn = isInline(style) ? RichUtils.toggleInlineStyle : RichUtils.toggleBlockType;
@@ -107,6 +111,7 @@ export default class DocumentEditor extends React.Component {
     super(props);
     this.state = {
       editorState: EditorState.createEmpty(),
+      fontArray: fontList.slice(9),
       fontRange: [
         8,
         9,
@@ -124,18 +129,21 @@ export default class DocumentEditor extends React.Component {
         96
       ],
       fontSize: 14,
+      fontType: 'Roboto',
       docTitle: 'New Doc',
       anchorEl: null,
+      anchorEl2: null,
     };
     this.onChange = editorState => this.setState({editorState});
   }
 
-  onInlineChange = (style) => (e) => {
+
+  onInlineChange = (e, style) => {
     e.preventDefault();
     this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, style))
   };
 
-  onBlockChange = (style) => (e) => {
+  onBlockChange = (e, style) => {
     e.preventDefault()
     this.onChange(RichUtils.toggleBlockType(this.state.editorState, style))
   };
@@ -178,6 +186,17 @@ export default class DocumentEditor extends React.Component {
     return this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, fontSize));
   }
 
+  toggleFont(e, font) {
+    e.preventDefault();
+    if (!customStyleMap[font]) {
+      customStyleMap[font] = {
+        fontFamily: this.state.fontArray[font]
+      }
+    }
+    this.setState({fontType: font})
+    this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, font));
+  }
+
   onFontColorChange = color => {
     console.log(color)
     customStyleMap['COLOR'] =
@@ -185,7 +204,7 @@ export default class DocumentEditor extends React.Component {
       color: color.hex
     }
     this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'COLOR'))
-    this.handleClose();
+    this.handleColorClose();
   }
 
   onHighlightColorChange = color => {
@@ -195,25 +214,36 @@ export default class DocumentEditor extends React.Component {
       backgroundColor: color.hex
     }
     this.onChange(RichUtils.toggleInlineStyle(this.state.editorState, 'HIGHLIGHT'))
-    this.handleClose();
+    this.handleHighlightClose();
   }
 
-  handleClick = event => {
+  handleColorClick = event => {
     this.setState({ anchorEl: event.currentTarget });
   };
 
-  handleClose = () => {
+  handleHighlightClick = event => {
+    this.setState({ anchorEl2: event.currentTarget });
+  };
+
+  handleColorClose = () => {
     this.setState({ anchorEl: null });
+  };
+
+  handleHighlightClose = () => {
+    this.setState({ anchorEl2: null });
   };
 
   render() {
     const { anchorEl } = this.state;
+    const { anchorEl2 } = this.state;
     return (<div className='document-header'>
       <TextField style={{
           paddingLeft: 30,
           paddingTop: 20,
-          paddingRight: 300
-        }} defaultValue={this.state.docTitle} onChange={e => this.handleTitleChange(e)} InputProps={{
+          paddingRight: 300,
+        }} defaultValue={this.state.docTitle} onInput={e => this.handleTitleChange(e)}
+        placeholder='Untitled Document'
+        InputProps={{
           style: {
             fontSize: 30,
             fontWeight: 'bold'
@@ -221,11 +251,19 @@ export default class DocumentEditor extends React.Component {
         }}/>
       <div >
         <Toolbar className='document-toolbar'>
-          <Toolbar className='document-toolbar-group-first'>
+
+          <Toolbar className='document-toolbar-group'>
+            <TextField select style={{paddingRight: 15}} value={this.state.fontType} placeholder='Roboto' onChange={e => this.toggleFont(e, e.target.value)}>
+              {
+                this.state.fontArray.map((font,i) => (<MenuItem key={font} value={i}>
+                  {font}
+                </MenuItem>))
+              }
+            </TextField>
 
             <TextField select value={this.state.fontSize} onChange={e => this.toggleFontSize(e, e.target.value)}>
               {
-                this.state.fontRange.map(fontSize => (<MenuItem key={fontSize} value={fontSize}>
+                this.state.fontRange.map((fontSize,i) => (<MenuItem key={fontSize} value={fontSize}>
                   {fontSize}
                 </MenuItem>))
               }
@@ -233,7 +271,10 @@ export default class DocumentEditor extends React.Component {
           </Toolbar>
           <Toolbar className='document-toolbar-group'>
             {
-              TOOLBAR_1.map((button) => <IconButton onMouseDown={this.onInlineChange(button.style)} key={button.style}>
+              TOOLBAR_1.map((button) => <IconButton
+                onMouseDown={(e) => this.onInlineChange(e, button.style)} key={button.style}
+                style={{backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style) ? '#E8E8E8' : '#FFFFFF'}}
+                >
                 <button.label/>
               </IconButton>)
             }
@@ -242,7 +283,7 @@ export default class DocumentEditor extends React.Component {
               <IconButton
                 aria-owns={anchorEl ? 'fontColor-menu' : null}
                 aria-haspopup="true"
-                onClick={this.handleClick}
+                onClick={this.handleColorClick}
               >
                 <TextColorIcon />
               </IconButton>
@@ -252,7 +293,7 @@ export default class DocumentEditor extends React.Component {
                 id="fontColor-menu"
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
-                onClose={this.handleClose}
+                onClose={this.handleColorClose}
 
               >
               <TwitterPicker onChangeComplete={ this.onFontColorChange }/>
@@ -262,34 +303,40 @@ export default class DocumentEditor extends React.Component {
             <div>
 
               <IconButton
-                aria-owns={anchorEl ? 'highlightColor-menu' : null}
+                aria-owns={anchorEl2 ? 'highlightColor-menu' : null}
                 aria-haspopup="true"
-                onClick={this.handleClick}
-              >
+                onClick={this.handleHighlightClick}>
                 <HighlightIcon />
               </IconButton>
               <Menu
                 select="select"
                 id="highlightColor-menu"
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={this.handleClose}
+                anchorEl={anchorEl2}
+                open={Boolean(anchorEl2)}
+                onClose={this.handleHighlightClose}
               >
               <TwitterPicker onChangeComplete={ this.onHighlightColorChange }/>
               </Menu>
             </div>
 
           </Toolbar>
-          <Toolbar>
+          <Toolbar className='document-toolbar-group'>
             {
-              TOOLBAR_2.map((button) => <IconButton onMouseDown={this.onBlockChange(button.style)} key={button.style}>
+              TOOLBAR_2.map((button) => <IconButton
+                onMouseDown={(e) => this.onBlockChange(e, button.style)}
+                key={button.style}
+                style={{backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style) ? '#E8E8E8' : '#FFFFFF'}}
+                >
                 <button.label/>
               </IconButton>)
             }
           </Toolbar>
           <Toolbar>
             {
-              TOOLBAR_3.map((button) => <IconButton onMouseDown={this.onBlockChange(button.style)} key={button.style}>
+              TOOLBAR_3.map((button) => <IconButton
+                onMouseDown={(e) => this.onBlockChange(e, button.style)} key={button.style}
+                style={{backgroundColor: this.state.editorState.getCurrentInlineStyle().has(button.style) ? '#E8E8E8' : '#FFFFFF'}}
+                >
                 <button.label/>
               </IconButton>)
             }
