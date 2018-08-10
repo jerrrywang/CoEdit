@@ -41,6 +41,21 @@ const styles = {
         position: 'absolute',
         bottom: 30,
         right: 30
+    },
+    editButton: {
+        width: 40,
+        height: 40,
+        minWidth: 30,
+        minHeight: 30,
+        position: 'relative',
+        left: 349,
+        top: 10
+    },
+    deleteButton: {
+        width: 40,
+        height: 40,
+        minWidth: 30,
+        minHeight: 30,
     }
 };
 
@@ -129,8 +144,10 @@ class Home extends React.Component {
                                     <Typography>
                                         {`Last modified: ${(new Date(doc.dateModified)).toDateString()}`}
                                     </Typography>
-                                    <Button onClick={() => this.openDoc(doc)}><EditIcon /></Button>
-                                    <Button onClick={() => this.deleteDoc(doc._id)}><DeleteIcon /></Button>
+                                    <Button style={styles.editButton}
+                                            onClick={() => this.openDoc(doc)}><EditIcon /></Button>
+                                    <Button style={styles.deleteButton}
+                                            onClick={() => this.deleteDoc(doc._id)}><DeleteIcon /></Button>
                                 </ExpansionPanelDetails>
                             </ExpansionPanel>
                         ))}
@@ -149,45 +166,3 @@ Home.propTypes = {
 };
 
 export default withStyles(matStyles)(Home);
-
-
-{/*<div key={doc._id}>*/}
-{/*<ListItem button style={styles.listItem}>*/}
-{/*<DocsIcon />*/}
-{/*<ListItemText style={styles.title}*/}
-{/*primary={doc.title}*/}
-{/*secondary={`Author: ${doc.owner}`}*/}
-{/*onClick={() => this.openDoc(doc)}>*/}
-{/*{(new Date(doc.dateModified)).toDateString()}*/}
-{/*</ListItemText>*/}
-{/*<div>*/}
-{/*<IconButton*/}
-{/*aria-label="More"*/}
-{/*aria-owns={this.state.anchorEl ? 'long-menu' : null}*/}
-{/*aria-haspopup="true"*/}
-{/*onClick={this.handleClick}*/}
-{/*>*/}
-{/*<MoreVertIcon />*/}
-{/*</IconButton>*/}
-{/*<Menu*/}
-{/*id="long-menu"*/}
-{/*anchorEl={this.state.anchorEl}*/}
-{/*open={Boolean(this.state.anchorEl)}*/}
-{/*onClose={this.handleClose}*/}
-{/*PaperProps={{*/}
-{/*style: {*/}
-{/*maxHeight: 48 * 4.5,*/}
-{/*width: 200,*/}
-{/*},*/}
-{/*}}*/}
-{/*>*/}
-{/*{options.map(option =>*/}
-{/*<MenuItem key={option} onClick={() => this.handleMenu(option, doc._id)}>*/}
-{/*{option}*/}
-{/*</MenuItem>*/}
-{/*)}*/}
-{/*</Menu>*/}
-{/*</div>*/}
-{/*</ListItem>*/}
-{/*<Divider />*/}
-{/*</div>*/}
