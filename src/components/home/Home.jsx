@@ -1,45 +1,98 @@
 import React from 'react';
-import openSocket from "socket.io-client";
 import Header from '../app/Header';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import Divider from '@material-ui/core/Divider';
-import Radium from 'radium';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+import DocsIcon from '@material-ui/icons/LibraryBooks'
+import AddIcon from '@material-ui/icons/Add';
+import Button from '@material-ui/core/Button';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Typography from '@material-ui/core/Typography';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import EditIcon from '@material-ui/icons/Edit'
+import DeleteIcon from '@material-ui/icons/Delete'
+import openSocket from "socket.io-client";
 const socket = openSocket('http://localhost:3000');
 
 const styles = {
+    div: {
+        background: '#eee',
+        height: '100vh'
+    },
     container: {
-        width: '100%',
         display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        background: '#eee'
+        flexDirection: 'column',
+        alignItems: 'center'
     },
-    list: {
-        maxWidth: 1130,
-        width: 1130,
-        minWidth: 670
+    main: {
+        display: 'flex',
+        flexDirection: 'column',
+        width: '80%',
+        marginTop: 60
     },
-    listItem: {
-        height: 50,
-        width: '100%'
+    docsIcon: {
+        marginRight: 15
+    },
+    title: {
+        fontSize: 16
+    },
+    add: {
+        position: 'absolute',
+        bottom: 30,
+        right: 30
+    },
+    editButton: {
+        width: 40,
+        height: 40,
+        minWidth: 30,
+        minHeight: 30,
+        position: 'relative',
+        left: 349,
+        top: 10
+    },
+    deleteButton: {
+        width: 40,
+        height: 40,
+        minWidth: 30,
+        minHeight: 30,
     }
 };
 
+const matStyles = theme => ({
+    heading: {
+        fontSize: theme.typography.pxToRem(15),
+        flexBasis: '33.33%',
+        flexShrink: 0,
+    },
+    secondaryHeading: {
+        fontSize: theme.typography.pxToRem(15),
+        color: theme.palette.text.secondary,
+    },
+});
+let user = null;
 class Home extends React.Component {
     state = {
-        docs: []
+        docs: [],
+        expanded: null
     };
 
     componentDidMount() {
-        socket.emit('findAllDocs', this.props.history.location.id);
-        socket.on('foundAllDocs', docs => {
-            this.setState({docs})
-        });
+        user = JSON.parse(localStorage.getItem('user'));
+        if (user && user.id) {
+            socket.emit('findAllDocs', user.id);
+            socket.on('foundAllDocs', docs => {
+                this.setState({docs})
+            });
+        } else {
+            this.props.history.push('/')
+        }
     }
     create = () => {
-        socket.emit('createDoc', this.props.history.location.id);
+        socket.emit('createDoc', {
+            id: user.id,
+            username: user.username
+        });
         socket.on('createdDoc', (res) => {
             this.props.history.push({
                 pathname: '/doc',
@@ -48,15 +101,19 @@ class Home extends React.Component {
             })
         })
     };
-
     openDoc = (doc) => {
         this.props.history.push({
             pathname: '/doc',
             contentState: doc.contentState,
-            docId: doc._id
+            docId: doc._id,
+            id: user.id
         });
     };
-
+    handleChange = panel => (event, expanded) => {
+        this.setState({
+            expanded: expanded ? panel : false,
+        });
+    };
     deleteDoc = (id) => {
         socket.emit('deleteDoc', id, () => {
             this.setState({docs: this.state.docs.filter(doc => doc._id !== id)})
@@ -64,27 +121,48 @@ class Home extends React.Component {
     };
 
     render() {
+        const { classes } = this.props;
+        const { expanded } = this.state;
         return(
-            <div>
-                <Header title='Docs'/>
-                <h1>Welcome {this.props.history.location.username}</h1>
+            <div style={styles.div}>
+                <Header history={this.props.history} title='Docs'/>
                 <div style={styles.container}>
-                    <List component="nav" style={styles.list}>
+                    <div style={styles.main}>
                         {this.state.docs.map(doc => (
-                            <div key={doc._id}>
-                                <ListItem button style={styles.listItem} onClick={() => this.openDoc(doc)}>
-                                    <ListItemText primary={doc._id} />
-                                    <button onClick={() => this.deleteDoc(doc._id)}>Delete</button>
-                                </ListItem>
-                                <Divider />
-                            </div>
+                            <ExpansionPanel expanded={expanded === doc._id} onChange={this.handleChange(doc._id)}>
+                                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                                    <DocsIcon style={styles.docsIcon}/>
+                                    <Typography style={styles.title} className={classes.heading}>
+                                        {doc.title}
+                                    </Typography>
+                                    <Typography className={classes.secondaryHeading}>{`Author: ${doc.owner}`}</Typography>
+                                </ExpansionPanelSummary>
+                                <ExpansionPanelDetails>
+                                    <Typography>
+                                        {`Created: ${(new Date(doc.dateCreated)).toDateString()}`}
+                                    </Typography>
+                                    <Typography>
+                                        {`Last modified: ${(new Date(doc.dateModified)).toDateString()}`}
+                                    </Typography>
+                                    <Button style={styles.editButton}
+                                            onClick={() => this.openDoc(doc)}><EditIcon /></Button>
+                                    <Button style={styles.deleteButton}
+                                            onClick={() => this.deleteDoc(doc._id)}><DeleteIcon /></Button>
+                                </ExpansionPanelDetails>
+                            </ExpansionPanel>
                         ))}
-                    </List>
+                    </div>
                 </div>
-                <button onClick={this.create}>Create new doc</button>
+                <Button variant="fab" color="primary" aria-label="Add" onClick={this.create} style={styles.add}>
+                    <AddIcon />
+                </Button>
             </div>
         )
     }
 };
 
-export default Radium(Home);
+Home.propTypes = {
+    classes: PropTypes.object.isRequired,
+};
+
+export default withStyles(matStyles)(Home);

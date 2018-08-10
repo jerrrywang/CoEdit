@@ -8,10 +8,14 @@ module.exports = (io) => {
         client.on('room', id => {
             client.join(id);
         });
-        client.on('createDoc', id => {
+        client.on('createDoc', createInfo => {
             const newDoc = new Doc({
                 contentState: null,
-                users: id
+                users: createInfo.id,
+                dateCreated: new Date(),
+                dateModified: new Date(),
+                title: 'Untitled document',
+                owner: createInfo.username,
             });
             newDoc.save()
                 .then(doc => client.emit('createdDoc', {id: doc._id}))

@@ -6,6 +6,10 @@ const docSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     }],
+    title: String,
+    dateCreated: Date,
+    dateModified: Date,
+    owner: String,
 }, { minimize: false });
 
 const Doc = mongoose.model('Doc', docSchema);

@@ -10,7 +10,7 @@ body {
 }
 
 .editor {
-  height: clac(100vh-105px);
+  height: calc(100vh-105px);
   background-color: #FFF;
   overflow: auto;
   border-top: solid 1px #ccc;
