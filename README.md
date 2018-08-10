@@ -6,7 +6,8 @@ Why?
 Real time editing in the browser (eg: Google Docs) hogs memory and begins to slow down computers when multiple documents are open. CoEdit is
 designed to provide the same features Google Docs does (real-time, rich editing; access, edit, and share docs) but on the desktop. 
 
-Technologies used: React.js, Electron.js, Socket.io, Draft.js, MongoDB
+Technologies used: React.js, Electron.js, Socket.io, Draft.js, MongoDB.
+Styling is done with Material UI.
 
 The text editor is built with Draft.js and has the ability to format text (font-size, font-weight, font-color, text-align, etc.).
 Document persistence is enabled with MongoDB.
