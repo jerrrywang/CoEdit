@@ -4,7 +4,7 @@ CoEdit is a desktop application that provides <b>real-time, collaborative rich t
 
 Why?
 Real time editing in the browser (eg: Google Docs) hogs memory and begins to slow down computers when multiple documents are open. CoEdit is
-designed to provide be a of Google Docs (users; real-time, rich editing; access, edit, and share docs) but on the desktop. 
+a clone of Google Docs (users; real-time, rich editing; access, edit, and share docs) but on the desktop. 
 
 Technologies used: <b>React.js, Electron.js, Socket.io, Draft.js, MongoDB, Passport.js</b>.
 Styling is done with Material UI.
